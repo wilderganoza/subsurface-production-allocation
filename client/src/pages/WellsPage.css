@@ -1,0 +1,166 @@
+.wells-page {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.wells-header-section {
+  margin-bottom: 20px;
+}
+
+.wells-header-section h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.wells-desc {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.wells-add-section {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.wells-input {
+  flex: 1;
+  padding: 8px 14px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-text);
+  font-size: 14px;
+}
+
+.wells-input:focus {
+  outline: none;
+  border-color: var(--color-border-focus);
+}
+
+.wells-empty {
+  text-align: center;
+  padding: 60px 24px;
+  color: var(--color-text-muted);
+}
+
+.wells-empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.wells-empty h3 {
+  color: var(--color-text);
+  margin-bottom: 6px;
+}
+
+.wells-table-wrapper {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--color-surface);
+}
+
+.wells-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.wells-table thead {
+  background: rgba(148, 163, 184, 0.08);
+}
+
+.wells-table th,
+.wells-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  text-align: center;
+  vertical-align: middle;
+}
+
+.wells-table th:last-child,
+.wells-table td:last-child {
+  width: 180px;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.wells-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.well-row {
+  transition: background 0.15s;
+  cursor: pointer;
+}
+
+.well-row:hover {
+  background: rgba(74, 124, 255, 0.08);
+}
+
+.well-row.active {
+  background: rgba(74, 124, 255, 0.12);
+}
+
+.well-name {
+  font-weight: 600;
+  color: var(--color-text);
+  display: inline-block;
+  width: 100%;
+}
+
+.well-name-input {
+  width: 100%;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-focus);
+  border-radius: 4px;
+  color: var(--color-text);
+  padding: 4px 8px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.well-status {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.well-status.new {
+  background: rgba(139, 143, 163, 0.15);
+  color: var(--color-text-muted);
+}
+
+.well-status.prod {
+  background: rgba(74, 124, 255, 0.15);
+  color: var(--color-primary);
+}
+
+.well-status.props {
+  background: rgba(251, 191, 36, 0.15);
+  color: var(--color-warning);
+}
+
+.well-status.events {
+  background: rgba(167, 139, 250, 0.15);
+  color: #a78bfa;
+}
+
+.well-status.allocated {
+  background: rgba(52, 211, 153, 0.15);
+  color: var(--color-success);
+}
+
+.well-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}

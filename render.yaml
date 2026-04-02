@@ -1,0 +1,36 @@
+databases:
+  - name: subsurface-production-allocation-db
+    plan: free
+    databaseName: subsurface_allocation
+    user: subsurface_user
+
+services:
+  - type: web
+    name: subsurface-production-allocation-api
+    runtime: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node src/index.js
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: subsurface-production-allocation-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
+
+  - type: web
+    name: subsurface-production-allocation-client
+    runtime: static
+    rootDir: client
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        value: https://subsurface-production-allocation-api.onrender.com
