@@ -70,28 +70,26 @@ export async function initDB() {
       );
     `);
 
-    // Bootstrap an initial admin only on first run, using env vars (no hardcoded credentials)
+    // Enforce single-admin mode: only one allowed user account.
     await client.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE');
-    const { rows } = await client.query('SELECT COUNT(*)::int AS count FROM users');
-    const userCount = rows[0].count;
-    if (userCount === 0) {
-      const username = process.env.BOOTSTRAP_ADMIN_USERNAME;
-      const password = process.env.BOOTSTRAP_ADMIN_PASSWORD;
-
-      if (!username || !password) {
-        throw new Error(
-          'No users found. Set BOOTSTRAP_ADMIN_USERNAME and BOOTSTRAP_ADMIN_PASSWORD to create the initial admin.'
-        );
-      }
-
-      const bcrypt = await import('bcryptjs');
-      const hash = bcrypt.default.hashSync(password, 12);
-      await client.query(
-        'INSERT INTO users (username, password_hash, is_admin) VALUES ($1, $2, $3)',
-        [username, hash, true]
-      );
-      console.log(`Initial admin user created: ${username}`);
+    const adminUsername = 'wilder.ganoza';
+    const adminPassword = process.env.SINGLE_ADMIN_PASSWORD;
+    if (!adminPassword) {
+      throw new Error('Set SINGLE_ADMIN_PASSWORD to enable single-admin mode.');
     }
+    const bcrypt = await import('bcryptjs');
+    const hash = bcrypt.default.hashSync(adminPassword, 12);
+
+    await client.query(
+      `INSERT INTO users (username, password_hash, is_admin)
+       VALUES ($1, $2, TRUE)
+       ON CONFLICT (username)
+       DO UPDATE SET password_hash = EXCLUDED.password_hash, is_admin = TRUE`,
+      [adminUsername, hash]
+    );
+
+    await client.query('DELETE FROM users WHERE username <> $1', [adminUsername]);
+    console.log(`Single-admin mode enforced for user: ${adminUsername}`);
 
     console.log('Database initialized successfully');
   } finally {
