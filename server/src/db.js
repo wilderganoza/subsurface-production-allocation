@@ -73,16 +73,16 @@ export async function initDB() {
     // Seed default user if no users exist
     await client.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE');
 
-    const { rows } = await client.query('SELECT COUNT(*) as count FROM users');
-    if (parseInt(rows[0].count) === 0) {
-      const bcrypt = await import('bcryptjs');
-      const hash = bcrypt.default.hashSync('wilder.ganoza', 10);
-      await client.query(
-        'INSERT INTO users (username, password_hash, is_admin) VALUES ($1, $2, $3)',
-        ['wilder.ganoza', hash, true]
-      );
-      console.log('Default user created: wilder.ganoza');
-    }
+    const bcrypt = await import('bcryptjs');
+    const hash = bcrypt.default.hashSync('wilder.ganoza1', 10);
+    await client.query(
+      `INSERT INTO users (username, password_hash, is_admin)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (username)
+       DO UPDATE SET password_hash = EXCLUDED.password_hash, is_admin = TRUE`,
+      ['wilder.ganoza', hash, true]
+    );
+    console.log('Default user ensured: wilder.ganoza');
 
     console.log('Database initialized successfully');
   } finally {
