@@ -70,26 +70,18 @@ export async function initDB() {
       );
     `);
 
-    // Enforce single-admin mode: only one allowed user account.
+    // Seed initial admin user if no users exist
     await client.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE');
-    const adminUsername = 'wilder.ganoza';
-    const adminPassword = process.env.SINGLE_ADMIN_PASSWORD;
-    if (!adminPassword) {
-      throw new Error('Set SINGLE_ADMIN_PASSWORD to enable single-admin mode.');
+    const { rows } = await client.query('SELECT COUNT(*)::int AS count FROM users');
+    if (rows[0].count === 0) {
+      const bcrypt = await import('bcryptjs');
+      const hash = bcrypt.default.hashSync('hALYSibaCesc', 10);
+      await client.query(
+        'INSERT INTO users (username, password_hash, is_admin) VALUES ($1, $2, $3)',
+        ['admin', hash, true]
+      );
+      console.log('Default admin user created: admin');
     }
-    const bcrypt = await import('bcryptjs');
-    const hash = bcrypt.default.hashSync(adminPassword, 12);
-
-    await client.query(
-      `INSERT INTO users (username, password_hash, is_admin)
-       VALUES ($1, $2, TRUE)
-       ON CONFLICT (username)
-       DO UPDATE SET password_hash = EXCLUDED.password_hash, is_admin = TRUE`,
-      [adminUsername, hash]
-    );
-
-    await client.query('DELETE FROM users WHERE username <> $1', [adminUsername]);
-    console.log(`Single-admin mode enforced for user: ${adminUsername}`);
 
     console.log('Database initialized successfully');
   } finally {
