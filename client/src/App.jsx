@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
 import LoginPage from './pages/LoginPage';
@@ -33,6 +34,7 @@ function ModuleRouter() {
 
 function App() {
   const { state } = useApp();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Show loading while checking auth
   if (!state.authChecked) {
@@ -48,13 +50,17 @@ function App() {
     return <LoginPage />;
   }
 
+  const toggleSidebar = () => {
+    setSidebarOpen(prev => !prev);
+  };
+
   return (
     <div className="app-layout">
-      <Sidebar />
-      <div className="app-main">
-        <Header />
+      <Header onToggleSidebar={toggleSidebar} />
+      <Sidebar isOpen={sidebarOpen} />
+      <main className="app-main" style={{ marginLeft: sidebarOpen ? '200px' : '0', marginTop: '56px' }}>
         <ModuleRouter />
-      </div>
+      </main>
     </div>
   );
 }

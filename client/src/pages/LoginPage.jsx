@@ -27,7 +27,7 @@ export default function LoginPage() {
     <div className="login-page">
       <div className="login-card">
         <div className="login-header">
-          <h1>Subsurface Allocation</h1>
+          <h1>Subsurface Production Allocation</h1>
           <p>Production Distribution Engine</p>
         </div>
 

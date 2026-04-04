@@ -3,6 +3,7 @@ import {
   ComposedChart, Line, XAxis, YAxis, Tooltip, Legend,
   ResponsiveContainer, ReferenceLine
 } from 'recharts';
+import { useTheme } from '../../context/ThemeContext';
 
 const COLORS = [
   '#4a7cff', '#34d399', '#fbbf24', '#f87171', '#a78bfa',
@@ -54,6 +55,14 @@ function extractPeriodStart(periodLabel) {
 }
 
 export default function DeclineCurveChart({ allocations, declineFits, productionHistory, decisions = [], interventionDates = [] }) {
+  const { theme } = useTheme();
+  
+  const chartLineColor = getComputedStyle(document.documentElement).getPropertyValue('--color-chart-line').trim();
+  const chartAxisColor = getComputedStyle(document.documentElement).getPropertyValue('--color-chart-axis').trim();
+  const tooltipBg = getComputedStyle(document.documentElement).getPropertyValue('--color-tooltip-bg').trim();
+  const tooltipBorder = getComputedStyle(document.documentElement).getPropertyValue('--color-tooltip-border').trim();
+  const textColor = getComputedStyle(document.documentElement).getPropertyValue('--color-text').trim();
+
   if (!allocations || allocations.length === 0) {
     return <p style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>No allocation data available.</p>;
   }
@@ -187,11 +196,11 @@ export default function DeclineCurveChart({ allocations, declineFits, production
 
       <ResponsiveContainer width="100%" height={450}>
         <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-          <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#8b8fa3' }} tickFormatter={v => v.slice(5)} />
-          <YAxis tick={{ fontSize: 11, fill: '#8b8fa3' }} />
+          <XAxis dataKey="date" tick={{ fontSize: 11, fill: chartAxisColor }} tickFormatter={v => v.slice(5)} />
+          <YAxis tick={{ fontSize: 11, fill: chartAxisColor }} />
           <Tooltip
-            contentStyle={{ background: '#1a1d27', border: '1px solid #2a2e3a', borderRadius: 8, fontSize: 12 }}
-            labelStyle={{ color: '#e4e6ed' }}
+            contentStyle={{ background: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: 8, fontSize: 12 }}
+            labelStyle={{ color: textColor }}
             formatter={(value, name) => [typeof value === 'number' ? value.toFixed(1) : value, name]}
           />
           <Legend wrapperStyle={{ fontSize: 11 }} />
@@ -235,8 +244,9 @@ export default function DeclineCurveChart({ allocations, declineFits, production
               <ReferenceLine
                 key={`int_${idx}`}
                 x={date}
-                stroke="#ffffff"
+                stroke={chartLineColor}
                 strokeDasharray="4 4"
+                strokeWidth={1.5}
                 strokeOpacity={0.5}
               />
             );

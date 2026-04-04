@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { AreaChart, Area, Line, XAxis, YAxis, Tooltip, Legend, ReferenceLine, ResponsiveContainer } from 'recharts';
+import { useTheme } from '../../context/ThemeContext';
 
 const COLOR_HEX = ['#4a7cff', '#34d399', '#fbbf24', '#f87171', '#a78bfa', '#f472b6', '#38bdf8', '#fb923c'];
 
@@ -97,6 +98,13 @@ function CustomLegend({ items }) {
 }
 
 export default function ProductionChart({ allocations, interventionDates = [] }) {
+  const { theme } = useTheme();
+  
+  const chartLineColor = getComputedStyle(document.documentElement).getPropertyValue('--color-chart-line').trim();
+  const chartAxisColor = getComputedStyle(document.documentElement).getPropertyValue('--color-chart-axis').trim();
+  const tooltipBg = getComputedStyle(document.documentElement).getPropertyValue('--color-tooltip-bg').trim();
+  const tooltipBorder = getComputedStyle(document.documentElement).getPropertyValue('--color-tooltip-border').trim();
+  const textColor = getComputedStyle(document.documentElement).getPropertyValue('--color-text').trim();
   const { chartData, periodSandOrders, colorMap } = useMemo(() => {
     const dateMap = {};
 
@@ -154,11 +162,12 @@ export default function ProductionChart({ allocations, interventionDates = [] })
       color: colorMap[sand],
     }));
     // Add total production to legend
+    const chartLineColor = getComputedStyle(document.documentElement).getPropertyValue('--color-chart-line').trim();
     items.push({
       value: 'Total Production',
       type: 'line',
       id: '_total',
-      color: '#ffffff',
+      color: chartLineColor,
     });
     return items;
   }, [allSands, colorMap]);
@@ -168,13 +177,13 @@ export default function ProductionChart({ allocations, interventionDates = [] })
       <AreaChart data={displayData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
         <XAxis
           dataKey="date"
-          tick={{ fontSize: 11, fill: '#8b8fa3' }}
+          tick={{ fontSize: 11, fill: chartAxisColor }}
           tickFormatter={v => v.slice(5)}
         />
-        <YAxis tick={{ fontSize: 11, fill: '#8b8fa3' }} />
+        <YAxis tick={{ fontSize: 11, fill: chartAxisColor }} />
         <Tooltip
-          contentStyle={{ background: '#1a1d27', border: '1px solid #2a2e3a', borderRadius: 8, fontSize: 13 }}
-          labelStyle={{ color: '#e4e6ed' }}
+          contentStyle={{ background: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: 8, fontSize: 13 }}
+          labelStyle={{ color: textColor }}
         />
         <Legend
           wrapperStyle={{ fontSize: 12 }}
@@ -184,8 +193,9 @@ export default function ProductionChart({ allocations, interventionDates = [] })
           <ReferenceLine
             key={`int-${date}`}
             x={date}
-            stroke="#ffffff"
+            stroke={chartLineColor}
             strokeDasharray="4 4"
+            strokeWidth={1.5}
             strokeOpacity={0.5}
           />
         ))}
@@ -221,7 +231,7 @@ export default function ProductionChart({ allocations, interventionDates = [] })
         <Line
           type="monotone"
           dataKey="_total"
-          stroke="#ffffff"
+          stroke={chartLineColor}
           strokeWidth={1.5}
           strokeDasharray="5 5"
           dot={false}
