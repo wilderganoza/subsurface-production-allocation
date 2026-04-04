@@ -1,3 +1,9 @@
+databases:
+  - name: subsurface-production-allocation-db
+    plan: free
+    databaseName: subsurface_allocation
+    user: subsurface_user
+
 services:
   - type: web
     name: subsurface-production-allocation-api
@@ -7,7 +13,9 @@ services:
     startCommand: node src/index.js
     envVars:
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: subsurface-production-allocation-db
+          property: connectionString
       - key: JWT_SECRET
         generateValue: true
       - key: NODE_ENV
