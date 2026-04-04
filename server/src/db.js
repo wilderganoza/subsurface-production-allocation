@@ -70,19 +70,28 @@ export async function initDB() {
       );
     `);
 
-    // Seed default user if no users exist
+    // Bootstrap an initial admin only on first run, using env vars (no hardcoded credentials)
     await client.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE');
+    const { rows } = await client.query('SELECT COUNT(*)::int AS count FROM users');
+    const userCount = rows[0].count;
+    if (userCount === 0) {
+      const username = process.env.BOOTSTRAP_ADMIN_USERNAME;
+      const password = process.env.BOOTSTRAP_ADMIN_PASSWORD;
 
-    const bcrypt = await import('bcryptjs');
-    const hash = bcrypt.default.hashSync('wilder.ganoza1', 10);
-    await client.query(
-      `INSERT INTO users (username, password_hash, is_admin)
-       VALUES ($1, $2, $3)
-       ON CONFLICT (username)
-       DO UPDATE SET password_hash = EXCLUDED.password_hash, is_admin = TRUE`,
-      ['wilder.ganoza', hash, true]
-    );
-    console.log('Default user ensured: wilder.ganoza');
+      if (!username || !password) {
+        throw new Error(
+          'No users found. Set BOOTSTRAP_ADMIN_USERNAME and BOOTSTRAP_ADMIN_PASSWORD to create the initial admin.'
+        );
+      }
+
+      const bcrypt = await import('bcryptjs');
+      const hash = bcrypt.default.hashSync(password, 12);
+      await client.query(
+        'INSERT INTO users (username, password_hash, is_admin) VALUES ($1, $2, $3)',
+        [username, hash, true]
+      );
+      console.log(`Initial admin user created: ${username}`);
+    }
 
     console.log('Database initialized successfully');
   } finally {
