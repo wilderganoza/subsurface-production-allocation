@@ -14,6 +14,8 @@ import './ModulePage.css';
 export default function AllocationPage() {
   const { state, dispatch, activeWell } = useApp();
   const [tab, setTab] = useState('chart');
+  const steps = ['Wells', 'Production', 'Petrophysics', 'Events', 'Allocation'];
+  const currentStep = 4;
 
   if (!activeWell) {
     return (
@@ -106,6 +108,16 @@ export default function AllocationPage() {
 
   return (
     <div className="module-page">
+      <div className="step-indicator">
+        {steps.map((step, idx) => (
+          <div
+            key={step}
+            className={`step ${idx < currentStep ? 'done' : ''} ${idx === currentStep ? 'active' : ''}`}
+            aria-label={step}
+          />
+        ))}
+      </div>
+
       <div className="module-header">
         <div>
           <h2>Allocation</h2>
@@ -113,11 +125,15 @@ export default function AllocationPage() {
             Configure and run the subsurface production allocation. The engine uses flow capacity (k&middot;h) factors and Arps decline curve analysis to distribute production among sands.
           </p>
         </div>
+        <div className="module-header-actions">
+          <span className="module-well-label">
+            Active well:&nbsp;<strong>{activeWell.name}</strong>
+          </span>
+        </div>
       </div>
 
-      <div className="allocation-config">
+      <div className="module-card">
         <h3>Configuration</h3>
-
         <div className="config-summary">
           <div className="config-item">
             <span className="config-label">Production Records:</span>
@@ -160,9 +176,13 @@ export default function AllocationPage() {
         </div>
 
         {!canRun && (
-          <div className="module-status warning">
+          <div className="module-status warning" role="alert">
             <strong>Missing data:</strong> {getMissingItems().join(', ')}
           </div>
+        )}
+
+        {state.error && (
+          <div className="module-status error" role="alert">{state.error}</div>
         )}
 
         <div className="form-group" style={{ maxWidth: 300 }}>
@@ -178,27 +198,20 @@ export default function AllocationPage() {
           </select>
         </div>
 
-        {state.error && (
-          <div className="module-status error">{state.error}</div>
-        )}
-
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div className="module-nav-buttons" style={{ justifyContent: 'flex-start', marginTop: 12 }}>
           <button className="btn btn-primary btn-run" onClick={handleRun} disabled={!canRun || state.isLoading}>
             {state.isLoading ? 'Computing...' : 'Run Allocation'}
           </button>
-          {state.isLoading && <div className="spinner" />}
+          {state.isLoading && <div className="spinner" aria-hidden="true" />}
+          <button className="btn btn-sm" onClick={handleExport} disabled={!results}>
+            Export Excel
+          </button>
         </div>
       </div>
 
       {results && (
-        <div className="allocation-results">
-          <div className="results-header">
-            <h3>Results</h3>
-            <button className="btn btn-sm btn-primary" onClick={handleExport}>
-              Export Excel
-            </button>
-          </div>
-
+        <div className="module-card">
+          <h3>Results</h3>
           <div className="results-tab-bar">
             {[
               { key: 'chart', label: 'Production Chart' },
@@ -219,19 +232,29 @@ export default function AllocationPage() {
           </div>
 
           <div className="tab-content">
-            {tab === 'chart' && <ProductionChart allocations={results.allocations} interventionDates={state.interventionMatrix.interventionDates} />}
+            {tab === 'chart' && (
+              <div className="module-table-wrapper" style={{ border: 'none', boxShadow: 'none' }}>
+                <ProductionChart allocations={results.allocations} interventionDates={state.interventionMatrix.interventionDates} />
+              </div>
+            )}
             {tab === 'decline' && (
-              <DeclineCurveChart
-                allocations={results.allocations}
-                declineFits={results.declineFits}
-                productionHistory={state.productionData}
-                decisions={results.decisions}
-                interventionDates={state.interventionMatrix.interventionDates}
-              />
+              <div className="module-table-wrapper" style={{ border: 'none', boxShadow: 'none' }}>
+                <DeclineCurveChart
+                  allocations={results.allocations}
+                  declineFits={results.declineFits}
+                  productionHistory={state.productionData}
+                  decisions={results.decisions}
+                  interventionDates={state.interventionMatrix.interventionDates}
+                />
+              </div>
             )}
             {tab === 'criteria' && <CriteriaView decisions={results.decisions} />}
             {tab === 'detailed' && <DetailedView allocations={results.allocations} decisions={results.decisions} sandProperties={state.sandProperties} />}
-            {tab === 'table' && <AllocationTable allocations={results.allocations} />}
+            {tab === 'table' && (
+              <div className="module-table-wrapper">
+                <AllocationTable allocations={results.allocations} />
+              </div>
+            )}
             {tab === 'summary' && <SummaryCards allocations={results.allocations} />}
           </div>
         </div>

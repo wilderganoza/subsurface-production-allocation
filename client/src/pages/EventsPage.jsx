@@ -4,12 +4,15 @@ import { api } from '../api/client';
 import FileUploader from '../components/upload/FileUploader';
 import InterventionMatrix from '../components/upload/InterventionMatrix';
 import { extractInterventionMatrix } from '../utils/fileParser';
+import WellSelector from '../components/layout/WellSelector';
 import '../components/ui/ui.css';
 import './ModulePage.css';
 
 export default function EventsPage() {
   const { state, dispatch, activeWell } = useApp();
   const [previewData, setPreviewData] = useState(null);
+  const steps = ['Wells', 'Production', 'Petrophysics', 'Events', 'Allocation'];
+  const currentStep = 3;
 
   if (!activeWell) {
     return (
@@ -58,6 +61,15 @@ export default function EventsPage() {
   if (state.sandProperties.length === 0) {
     return (
       <div className="module-page">
+        <div className="step-indicator">
+          {steps.map((step, idx) => (
+            <div
+              key={step}
+              className={`step ${idx < currentStep ? 'done' : ''} ${idx === currentStep ? 'active' : ''}`}
+              aria-label={step}
+            />
+          ))}
+        </div>
         <div className="module-header">
           <div><h2>Intervention History</h2></div>
           <WellSelector />
@@ -76,6 +88,16 @@ export default function EventsPage() {
 
   return (
     <div className="module-page">
+      <div className="step-indicator">
+        {steps.map((step, idx) => (
+          <div
+            key={step}
+            className={`step ${idx < currentStep ? 'done' : ''} ${idx === currentStep ? 'active' : ''}`}
+            aria-label={step}
+          />
+        ))}
+      </div>
+
       <div className="module-header">
         <div>
           <h2>Intervention History</h2>
@@ -84,32 +106,40 @@ export default function EventsPage() {
             Mark with <strong>X</strong> the sands that were open at each date.
           </p>
         </div>
+        <div className="module-header-actions">
+          <span className="module-well-label">
+            Active well:&nbsp;<strong>{activeWell.name}</strong>
+          </span>
+        </div>
       </div>
 
       {im.interventionDates.length > 0 && !previewData && (
-        <div className="module-status success">
-          <strong>{im.interventionDates.length}</strong> intervention dates configured
-          &nbsp;&mdash;&nbsp;
-          <strong>{im.sandNames.length}</strong> sands in matrix
+        <div className="module-status success" role="status">
+          <div className="status-content">
+            <strong>{im.interventionDates.length}</strong> intervention dates configured &mdash; <strong>{im.sandNames.length}</strong> sands in matrix
+          </div>
         </div>
       )}
 
-      <FileUploader
-        onFileParsed={handleFileParsed}
-        label="Drop intervention matrix file here"
-      />
+      <div className="module-card">
+        <h3>Upload intervention matrix</h3>
+        <FileUploader
+          onFileParsed={handleFileParsed}
+          label="Drag & drop intervention matrix"
+        />
+        <p className="module-desc">
+          The file should contain a header row with intervention dates (YYYY-MM-DD) and rows for each sand. Cells with <strong>X</strong> indicate the sand was open.
+        </p>
+      </div>
 
       {/* File preview before confirming */}
       {previewData && (
-        <div className="file-column-picker" style={{ marginTop: 16 }}>
-          <div className="picker-header">
-            <h4>Preview Intervention Matrix</h4>
-            <p className="picker-desc">
-              {previewData.sandNames.length} sands, {previewData.interventionDates.length} intervention dates detected. Review and confirm.
-            </p>
-          </div>
-
-          <div className="picker-preview">
+        <div className="module-card">
+          <h3>Preview intervention matrix</h3>
+          <p className="module-desc">
+            {previewData.sandNames.length} sands &middot; {previewData.interventionDates.length} intervention dates detected. Review before importing.
+          </p>
+          <div className="module-table-wrapper">
             <div className="table-scroll" style={{ maxHeight: 350 }}>
               <table className="data-table intervention-preview-table">
                 <thead>
@@ -126,12 +156,12 @@ export default function EventsPage() {
                       <td style={{ fontWeight: 500 }}>{sand}</td>
                       {previewData.interventionDates.map((_, di) => (
                         <td
-                          key={di}
+                          key={`${sand}-${di}`}
                           style={{
                             textAlign: 'center',
                             fontWeight: 600,
                             color: previewData.matrix[si]?.[di] ? 'var(--color-primary)' : 'var(--color-text-muted)',
-                            background: previewData.matrix[si]?.[di] ? 'rgba(74,124,255,0.1)' : 'transparent',
+                            background: previewData.matrix[si]?.[di] ? 'rgba(74,124,255,0.12)' : 'transparent',
                           }}
                         >
                           {previewData.matrix[si]?.[di] ? 'X' : '-'}
@@ -143,19 +173,20 @@ export default function EventsPage() {
               </table>
             </div>
           </div>
-
-          <div className="picker-actions">
-            <button className="btn btn-primary" onClick={handleConfirmFile}>
-              Confirm ({previewData.sandNames.length} sands, {previewData.interventionDates.length} dates)
-            </button>
+          <div className="module-nav-buttons" style={{ marginTop: 12 }}>
             <button className="btn" onClick={() => setPreviewData(null)}>Cancel</button>
+            <button className="btn btn-primary" onClick={handleConfirmFile}>
+              Confirm import
+            </button>
           </div>
         </div>
       )}
 
       {/* Editable matrix (only when data is loaded and no file preview) */}
       {!previewData && (
-        <div style={{ marginTop: 20 }}>
+        <div className="module-card">
+          <h3>Manual intervention editor</h3>
+          <p className="module-desc">Toggle the sands that were open at each intervention date. Use the Add Date button to capture workovers or completions.</p>
           <InterventionMatrix
             sandNames={sandNames}
             interventionMatrix={im}

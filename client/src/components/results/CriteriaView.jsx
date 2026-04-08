@@ -53,12 +53,10 @@ function generateDescription(decision) {
 }
 
 export default function CriteriaView({ decisions }) {
-  console.log('CriteriaView - decisions:', decisions);
-  
   if (!decisions || decisions.length === 0) {
     return (
       <div style={{ padding: '24px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-        No decision criteria available. Run the allocation first.
+        No hay criterios de decisión disponibles. Ejecuta la asignación para generar resultados.
       </div>
     );
   }
@@ -66,24 +64,33 @@ export default function CriteriaView({ decisions }) {
   return (
     <div style={{ padding: '24px' }}>
       <h3 style={{ marginBottom: '8px', fontSize: '16px', fontWeight: 600 }}>
-        Allocation Criteria by Intervention
+        Criterios de asignación por intervención
       </h3>
       <p style={{ marginBottom: '20px', fontSize: '13px', color: 'var(--color-text-muted)' }}>
-        Describes what happens at each intervention period.
+        Resume las acciones aplicadas en cada periodo de intervención y cómo impactan a las arenas activas.
       </p>
 
       <div style={{ overflowX: 'auto', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+          <caption style={{
+            captionSide: 'top',
+            textAlign: 'left',
+            padding: '12px 12px 0',
+            fontSize: '12px',
+            color: 'var(--color-text-muted)',
+          }}>
+            Detalle cronológico de criterios aplicados por el motor de asignación.
+          </caption>
           <thead>
             <tr style={{ background: 'var(--color-surface)', borderBottom: '2px solid var(--color-border)' }}>
               <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600, color: 'var(--color-text-muted)', width: '120px' }}>
-                Intervention
+                Intervención
               </th>
               <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600, color: 'var(--color-text-muted)', width: '200px' }}>
-                Period
+                Periodo
               </th>
               <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600, color: 'var(--color-text-muted)' }}>
-                Criteria
+                Criterio aplicado
               </th>
             </tr>
           </thead>

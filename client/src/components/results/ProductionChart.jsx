@@ -2,7 +2,16 @@ import { useMemo } from 'react';
 import { AreaChart, Area, Line, XAxis, YAxis, Tooltip, Legend, ReferenceLine, ResponsiveContainer } from 'recharts';
 import { useTheme } from '../../context/ThemeContext';
 
-const COLOR_HEX = ['#4a7cff', '#34d399', '#fbbf24', '#f87171', '#a78bfa', '#f472b6', '#38bdf8', '#fb923c'];
+const COLOR_TOKENS = [
+  '--color-chart-1',
+  '--color-chart-2',
+  '--color-chart-3',
+  '--color-chart-4',
+  '--color-chart-5',
+  '--color-chart-6',
+  '--color-chart-7',
+  '--color-chart-8',
+];
 
 /**
  * Builds period-based sand ordering.
@@ -67,8 +76,10 @@ function buildPeriodSandOrders(allocations, interventionDates) {
 function assignSandColors(allocations) {
   const allSands = [...new Set(allocations.map(a => a.sandName))].sort();
   const colorMap = {};
+  const styles = getComputedStyle(document.documentElement);
   allSands.forEach((sand, i) => {
-    colorMap[sand] = COLOR_HEX[i % COLOR_HEX.length];
+    const token = COLOR_TOKENS[i % COLOR_TOKENS.length];
+    colorMap[sand] = styles.getPropertyValue(token).trim() || '#4a7cff';
   });
   return colorMap;
 }
@@ -78,16 +89,26 @@ function CustomLegend({ items }) {
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-      <ul className="recharts-default-legend" style={{ margin: 0, padding: 0, display: 'inline-flex', flexWrap: 'wrap', justifyContent: 'center' }}>
+      <ul
+        className="recharts-default-legend"
+        style={{
+          margin: 0,
+          padding: 0,
+          display: 'inline-flex',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          gap: 12,
+        }}
+      >
         {items.map(entry => (
           <li
             key={entry.value}
             className="recharts-legend-item"
-            style={{ display: 'inline-flex', alignItems: 'center', marginRight: 12, gap: 4 }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12 }}
           >
             <span
               className="recharts-legend-icon"
-              style={{ display: 'inline-block', width: 12, height: 12, backgroundColor: entry.color, borderRadius: 2 }}
+              style={{ display: 'inline-block', width: 12, height: 12, backgroundColor: entry.color, borderRadius: 3 }}
             />
             <span className="recharts-legend-item-text" style={{ color: 'var(--color-text)' }}>{entry.value}</span>
           </li>
@@ -182,8 +203,16 @@ export default function ProductionChart({ allocations, interventionDates = [] })
         />
         <YAxis tick={{ fontSize: 11, fill: chartAxisColor }} />
         <Tooltip
-          contentStyle={{ background: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: 8, fontSize: 13 }}
+          contentStyle={{
+            background: tooltipBg,
+            border: `1px solid ${tooltipBorder}`,
+            borderRadius: 8,
+            fontSize: 13,
+            color: textColor,
+          }}
           labelStyle={{ color: textColor }}
+          formatter={(value, name) => [typeof value === 'number' ? `${value.toFixed(1)} bbl/d` : value, name]}
+          labelFormatter={label => `Date: ${label}`}
         />
         <Legend
           wrapperStyle={{ fontSize: 12 }}
@@ -197,6 +226,7 @@ export default function ProductionChart({ allocations, interventionDates = [] })
             strokeDasharray="4 4"
             strokeWidth={1.5}
             strokeOpacity={0.5}
+            label={{ value: date, position: 'top', fontSize: 11, fill: chartAxisColor, offset: 6 }}
           />
         ))}
         {/* Render areas by period with different stackIds */}

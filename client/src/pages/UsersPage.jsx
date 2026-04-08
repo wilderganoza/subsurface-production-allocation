@@ -223,48 +223,50 @@ export default function UsersPage() {
         </div>
       </div>
 
-      {error && <div className="module-status error">{error}</div>}
+      {error && <div className="module-status error" role="alert">{error}</div>}
       {loading ? (
-        <div className="module-status info">Loading users…</div>
+        <div className="module-status info" role="status">Loading users…</div>
       ) : filteredUsers.length === 0 ? (
-        <div className="module-status info">No users found.</div>
+        <div className="module-status info" role="status">No users found.</div>
       ) : (
-        <div className="wells-table-wrapper">
-          <table className="wells-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Username</th>
-                <th>Role</th>
-                <th>Created at</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.map(user => (
-                <tr key={user.id}>
-                  <td>{user.id}</td>
-                  <td>{user.username}</td>
-                  <td>{user.is_admin ? 'Admin' : 'Standard'}</td>
-                  <td>{new Date(user.created_at).toLocaleDateString()}</td>
-                  <td>
-                    <div className="table-actions">
-                      <button className="btn btn-sm" onClick={() => setEditUser(user)}>
-                        Edit
-                      </button>
-                      <button
-                        className="btn btn-sm btn-danger"
-                        onClick={() => setDeleteUser(user)}
-                        disabled={user.id === state.user.id}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
+        <div className="module-card">
+          <div className="module-table-wrapper" style={{ boxShadow: 'none' }}>
+            <table className="wells-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Username</th>
+                  <th>Role</th>
+                  <th>Created at</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filteredUsers.map(user => (
+                  <tr key={user.id}>
+                    <td>{user.id}</td>
+                    <td>{user.username}</td>
+                    <td>{user.is_admin ? 'Admin' : 'Standard'}</td>
+                    <td>{new Date(user.created_at).toLocaleDateString()}</td>
+                    <td>
+                      <div className="table-actions">
+                        <button className="btn btn-sm" onClick={() => setEditUser(user)}>
+                          Edit
+                        </button>
+                        <button
+                          className="btn btn-sm btn-danger"
+                          onClick={() => setDeleteUser(user)}
+                          disabled={user.id === state.user.id}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

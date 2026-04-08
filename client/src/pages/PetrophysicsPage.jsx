@@ -25,6 +25,9 @@ export default function PetrophysicsPage() {
   const { state, dispatch, activeWell } = useApp();
   const [petroFile, setPetroFile] = useState(null);
 
+  const steps = ['Wells', 'Production', 'Petrophysics', 'Events', 'Allocation'];
+  const currentStep = 2;
+
   if (!activeWell) {
     return (
       <div className="module-page-empty">
@@ -73,6 +76,16 @@ export default function PetrophysicsPage() {
 
   return (
     <div className="module-page">
+      <div className="step-indicator">
+        {steps.map((step, idx) => (
+          <div
+            key={step}
+            className={`step ${idx < currentStep ? 'done' : ''} ${idx === currentStep ? 'active' : ''}`}
+            aria-label={step}
+          />
+        ))}
+      </div>
+
       <div className="module-header">
         <div>
           <h2>Sand Properties</h2>
@@ -81,64 +94,82 @@ export default function PetrophysicsPage() {
             You can upload an Excel file or enter values manually.
           </p>
         </div>
+        <div className="module-header-actions">
+          <span className="module-well-label">
+            Active well:&nbsp;<strong>{activeWell.name}</strong>
+          </span>
+        </div>
       </div>
 
       {sands.length > 0 && (
-        <div className="module-status success">
+        <div className="module-status success" role="status">
           <div className="status-content">
             <strong>{sands.length}</strong> sands defined
           </div>
-          <button className="btn btn-sm btn-danger" onClick={handleClearSands}>Clear</button>
+          <div className="table-actions">
+            <button className="btn btn-sm btn-danger" onClick={handleClearSands}>Clear</button>
+          </div>
         </div>
       )}
 
-      <FileUploader onFileParsed={handleFileParsed} label="Drop petrophysics file here" />
+      <div className="module-card">
+        <h3>Upload sand properties</h3>
+        <FileUploader onFileParsed={handleFileParsed} label="Drag & drop k·h file" />
+        <p className="module-desc">Each row must include a sand name and its k·h value (md·ft). The tool will auto-detect the correct columns.</p>
+      </div>
 
       {petroFile && (
-        <FileColumnPicker
-          headers={petroFile.headers}
-          rows={petroFile.rows}
-          columns={PETRO_COLUMNS}
-          onConfirm={handleConfirmFile}
-          onCancel={() => setPetroFile(null)}
-        />
+        <div className="module-card">
+          <FileColumnPicker
+            headers={petroFile.headers}
+            rows={petroFile.rows}
+            columns={PETRO_COLUMNS}
+            onConfirm={handleConfirmFile}
+            onCancel={() => setPetroFile(null)}
+          />
+        </div>
       )}
 
       {/* Show loaded data preview */}
       {sands.length > 0 && !petroFile && (
-        <div className="module-preview-table">
-          <h4>Loaded Sand Properties</h4>
-          <div className="table-scroll">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Sand Name</th>
-                  <th>k&middot;h (md&middot;ft)</th>
-                  <th>Factor (%)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(() => {
-                  const totalKh = sands.reduce((s, p) => s + p.kh, 0);
-                  return sands.map((s, i) => (
-                    <tr key={i}>
-                      <td>{i + 1}</td>
-                      <td>{s.sandName}</td>
-                      <td>{s.kh.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-                      <td>{totalKh > 0 ? ((s.kh / totalKh) * 100).toFixed(2) : '0.00'}%</td>
-                    </tr>
-                  ));
-                })()}
-              </tbody>
-            </table>
+        <div className="module-card module-preview-table">
+          <h3>Loaded sand properties</h3>
+          <p className="module-desc">k·h is used to weight allocation during surplus/deficit adjustments. Ensure values reflect current flow capacity.</p>
+          <div className="module-table-wrapper">
+            <div className="table-scroll">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Sand Name</th>
+                    <th>k&middot;h (md&middot;ft)</th>
+                    <th>Factor (%)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(() => {
+                    const totalKh = sands.reduce((s, p) => s + p.kh, 0);
+                    return sands.map((s, i) => (
+                      <tr key={i}>
+                        <td>{i + 1}</td>
+                        <td>{s.sandName}</td>
+                        <td>{s.kh.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                        <td>{totalKh > 0 ? ((s.kh / totalKh) * 100).toFixed(2) : '0.00'}%</td>
+                      </tr>
+                    ));
+                  })()}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
 
       {/* Manual editor (only when no file is being picked and no data loaded) */}
       {!petroFile && sands.length === 0 && (
-        <div style={{ marginTop: 20 }}>
+        <div className="module-card">
+          <h3>Manual entry</h3>
+          <p className="module-desc">Add each sand with its k·h. The list updates the allocation engine immediately.</p>
           <SandPropertiesEditor
             sandProperties={sands}
             onChange={handleSandChange}

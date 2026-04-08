@@ -1,28 +1,38 @@
 .wells-page {
   flex: 1;
   overflow-y: auto;
-  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 .wells-header-section {
-  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .wells-header-section h2 {
   font-size: 20px;
   font-weight: 700;
-  margin-bottom: 4px;
+  line-height: 1.3;
 }
 
 .wells-desc {
   font-size: 13px;
   color: var(--color-text-muted);
+  line-height: 1.5;
 }
 
 .wells-add-section {
   display: flex;
   gap: 8px;
-  margin-bottom: 24px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-xs);
+  align-items: center;
 }
 
 .wells-input {
@@ -33,35 +43,46 @@
   border-radius: var(--radius);
   color: var(--color-text);
   font-size: 14px;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .wells-input:focus {
   outline: none;
-  border-color: var(--color-border-focus);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(74, 124, 255, 0.18);
 }
 
 .wells-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  padding: 60px 24px;
+  gap: 12px;
+  padding: 72px 24px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
   color: var(--color-text-muted);
 }
 
 .wells-empty-icon {
   font-size: 48px;
-  margin-bottom: 12px;
-  opacity: 0.5;
+  opacity: 0.4;
 }
 
 .wells-empty h3 {
   color: var(--color-text);
-  margin-bottom: 6px;
+  font-size: 18px;
+  font-weight: 600;
 }
 
 .wells-table-wrapper {
   border: 1px solid var(--color-border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   overflow: hidden;
   background: var(--color-surface);
+  box-shadow: var(--shadow-xs);
 }
 
 .wells-table {
@@ -70,23 +91,22 @@
   font-size: 13px;
 }
 
-.wells-table thead {
-  background: rgba(148, 163, 184, 0.08);
+.wells-table thead th {
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .wells-table th,
 .wells-table td {
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  border-bottom: 1px solid var(--color-border);
   text-align: center;
   vertical-align: middle;
-}
-
-.wells-table th:last-child,
-.wells-table td:last-child {
-  width: 180px;
-  padding-left: 8px;
-  padding-right: 8px;
 }
 
 .wells-table tbody tr:last-child td {
@@ -94,7 +114,7 @@
 }
 
 .well-row {
-  transition: background 0.15s;
+  transition: background var(--transition-fast);
   cursor: pointer;
 }
 
@@ -116,12 +136,19 @@
 .well-name-input {
   width: 100%;
   background: var(--color-bg);
-  border: 1px solid var(--color-border-focus);
-  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   color: var(--color-text);
-  padding: 4px 8px;
+  padding: 6px 10px;
   font-weight: 600;
   text-align: center;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.well-name-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(74, 124, 255, 0.18);
 }
 
 .well-status {
@@ -129,11 +156,15 @@
   padding: 3px 10px;
   border-radius: 999px;
   font-weight: 600;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 
 .well-status.new {
-  background: rgba(139, 143, 163, 0.15);
+  background: rgba(188, 194, 212, 0.2);
   color: var(--color-text-muted);
 }
 
@@ -143,17 +174,17 @@
 }
 
 .well-status.props {
-  background: rgba(251, 191, 36, 0.15);
+  background: rgba(251, 191, 36, 0.18);
   color: var(--color-warning);
 }
 
 .well-status.events {
-  background: rgba(167, 139, 250, 0.15);
+  background: rgba(167, 139, 250, 0.18);
   color: #a78bfa;
 }
 
 .well-status.allocated {
-  background: rgba(52, 211, 153, 0.15);
+  background: rgba(52, 211, 153, 0.18);
   color: var(--color-success);
 }
 
@@ -162,5 +193,4 @@
   justify-content: center;
   align-items: center;
   gap: 8px;
-  width: 100%;
 }
