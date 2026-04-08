@@ -226,7 +226,6 @@ export default function ProductionChart({ allocations, interventionDates = [] })
             strokeDasharray="4 4"
             strokeWidth={1.5}
             strokeOpacity={0.5}
-            label={{ value: date, position: 'top', fontSize: 11, fill: chartAxisColor, offset: 6 }}
           />
         ))}
         {/* Render areas by period with different stackIds */}
