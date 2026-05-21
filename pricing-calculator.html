@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Calculadora de Precios — Subsurface Production Allocation</title>
+<style>
+  /* ── Reset & tokens ─────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --primary:       #4a7cff;
+    --primary-hover: #3a6aee;
+    --accent:        #10b981;
+    --amber:         #fbbf24;
+    --danger:        #f87171;
+    --radius:        10px;
+    --radius-lg:     16px;
+    --transition:    0.18s ease;
+  }
+
+  [data-theme="dark"] {
+    --bg:        #0f1117;
+    --surface:   #1a1d27;
+    --surface2:  #232733;
+    --border:    #2a2e3a;
+    --text:      #e4e6ed;
+    --muted:     #8b8fa3;
+    --shadow:    0 4px 24px rgba(0,0,0,.45);
+  }
+  [data-theme="light"] {
+    --bg:        #f5f7fa;
+    --surface:   #ffffff;
+    --surface2:  #f0f2f5;
+    --border:    #e1e4e8;
+    --text:      #1a1d27;
+    --muted:     #6b7280;
+    --shadow:    0 4px 24px rgba(15,23,42,.12);
+  }
+
+  body {
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 16px 80px;
+    transition: background var(--transition), color var(--transition);
+  }
+
+  /* ── Header ─────────────────────────────────────────────────── */
+  .top-bar {
+    width: 100%;
+    max-width: 860px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 36px;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -.3px;
+  }
+  .logo svg { color: var(--primary); }
+
+  .theme-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 16px;
+    transition: background var(--transition);
+  }
+  .theme-btn:hover { background: var(--border); }
+
+  /* ── Main card ───────────────────────────────────────────────── */
+  .card {
+    width: 100%;
+    max-width: 860px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 28px 32px 24px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, var(--surface) 60%, #1e2540);
+  }
+  .card-header h1 {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -.4px;
+    margin-bottom: 6px;
+  }
+  .card-header h1 span { color: var(--primary); }
+  .card-header p { font-size: 13px; color: var(--muted); }
+
+  .card-body { padding: 28px 32px; display: flex; flex-direction: column; gap: 28px; }
+
+  /* ── Input section ───────────────────────────────────────────── */
+  .input-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 580px) { .input-row { grid-template-columns: 1fr; } }
+
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    margin-bottom: 8px;
+  }
+
+  .well-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .well-input-wrap svg {
+    position: absolute;
+    left: 12px;
+    color: var(--muted);
+    pointer-events: none;
+  }
+  input[type="number"] {
+    width: 100%;
+    padding: 11px 14px 11px 38px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 600;
+    transition: border-color var(--transition), box-shadow var(--transition);
+    -moz-appearance: textfield;
+  }
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+  input[type="number"]:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(74,124,255,.18);
+  }
+
+  /* ── Billing toggle ──────────────────────────────────────────── */
+  .billing-toggle {
+    display: flex;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 4px;
+    gap: 2px;
+  }
+  .billing-toggle button {
+    flex: 1;
+    padding: 8px 10px;
+    border: none;
+    border-radius: calc(var(--radius) - 2px);
+    background: transparent;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition);
+    white-space: nowrap;
+  }
+  .billing-toggle button.active {
+    background: var(--primary);
+    color: #fff;
+  }
+  .billing-toggle button .badge {
+    display: inline-block;
+    background: rgba(255,255,255,.22);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 10px;
+    margin-left: 4px;
+  }
+  .billing-toggle button:not(.active) .badge {
+    background: rgba(74,124,255,.18);
+    color: var(--primary);
+  }
+
+  /* ── Plan cards ──────────────────────────────────────────────── */
+  .plans-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  @media (max-width: 640px) { .plans-grid { grid-template-columns: 1fr; } }
+
+  .plan-card {
+    border: 2px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px 18px;
+    cursor: pointer;
+    transition: border-color var(--transition), box-shadow var(--transition),
+                transform var(--transition), background var(--transition);
+    position: relative;
+    background: var(--surface2);
+  }
+  .plan-card:hover:not(.disabled) {
+    border-color: var(--plan-color);
+    box-shadow: 0 0 0 1px var(--plan-color);
+    transform: translateY(-2px);
+  }
+  .plan-card.selected {
+    border-color: var(--plan-color);
+    box-shadow: 0 0 0 2px var(--plan-color), 0 8px 24px rgba(0,0,0,.2);
+    background: var(--surface);
+    transform: translateY(-2px);
+  }
+  .plan-card.disabled {
+    opacity: .38;
+    cursor: not-allowed;
+  }
+
+  .plan-badge {
+    position: absolute;
+    top: -1px; right: 14px;
+    background: var(--plan-color);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 0 0 6px 6px;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+  }
+
+  .plan-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 12px;
+    background: color-mix(in srgb, var(--plan-color) 18%, transparent);
+  }
+  .plan-icon svg { color: var(--plan-color); }
+
+  .plan-name {
+    font-size: 15px;
+    font-weight: 800;
+    margin-bottom: 2px;
+    color: var(--text);
+  }
+  .plan-wells {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  .plan-price-monthly {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--plan-color);
+    line-height: 1;
+  }
+  .plan-price-monthly .currency { font-size: 15px; font-weight: 600; }
+  .plan-price-monthly .period  { font-size: 12px; font-weight: 500; color: var(--muted); margin-left: 2px; }
+
+  .plan-price-total {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .plan-discount-badge {
+    display: inline-block;
+    background: color-mix(in srgb, var(--accent) 20%, transparent);
+    color: var(--accent);
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 4px;
+    padding: 2px 6px;
+    margin-top: 6px;
+  }
+
+  .plan-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 14px 0;
+  }
+
+  .plan-feature {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .plan-feature .check { color: var(--plan-color); flex-shrink: 0; }
+  .plan-feature .dash  { color: var(--border); flex-shrink: 0; }
+
+  /* ── Result box ──────────────────────────────────────────────── */
+  .result-box {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: border-color var(--transition);
+  }
+  .result-box.has-plan { border-color: var(--plan-color, var(--primary)); }
+
+  .result-header {
+    padding: 16px 20px;
+    background: color-mix(in srgb, var(--plan-color, var(--primary)) 12%, var(--surface2));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .result-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    color: var(--muted);
+  }
+  .result-plan-name {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--plan-color, var(--primary));
+  }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+  }
+  @media (max-width: 500px) { .result-grid { grid-template-columns: 1fr; } }
+
+  .result-item {
+    padding: 18px 20px;
+    border-right: 1px solid var(--border);
+  }
+  .result-item:last-child { border-right: none; }
+  .result-item-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 6px;
+  }
+  .result-item-value {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text);
+  }
+  .result-item-value .unit { font-size: 13px; font-weight: 500; color: var(--muted); }
+  .result-item-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+  .result-item.highlight .result-item-value { color: var(--plan-color, var(--primary)); }
+
+  .no-plan-msg {
+    padding: 32px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .no-plan-msg svg { display: block; margin: 0 auto 10px; opacity: .4; }
+
+  /* ── Footer note ─────────────────────────────────────────────── */
+  .footnote {
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 20px;
+    line-height: 1.7;
+  }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="logo">
+    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round"
+        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14
+           0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+    </svg>
+    Subsurface Production Allocation
+  </div>
+  <button class="theme-btn" id="themeBtn" title="Cambiar tema">🌙</button>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h1>Calculadora de <span>Precios</span></h1>
+    <p>Ingresa cuántos pozos necesitas gestionar y selecciona tu plan para conocer el costo exacto.</p>
+  </div>
+
+  <div class="card-body">
+
+    <!-- Inputs -->
+    <div class="input-row">
+      <div class="field">
+        <label>Número de pozos</label>
+        <div class="well-input-wrap">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0
+                 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2
+                 2 0 012 2v2M7 7h10"/>
+          </svg>
+          <input type="number" id="wellCount" min="1" max="999" value="10"
+                 placeholder="Ej: 25" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Ciclo de facturación</label>
+        <div class="billing-toggle">
+          <button data-cycle="monthly"   class="active">Mensual</button>
+          <button data-cycle="quarterly">Trimestral<span class="badge">−10%</span></button>
+          <button data-cycle="annual">   Anual<span class="badge">−20%</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Plan cards -->
+    <div class="plans-grid" id="plansGrid"></div>
+
+    <!-- Result -->
+    <div class="result-box" id="resultBox">
+      <div class="no-plan-msg">
+        <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15
+               11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+        </svg>
+        Selecciona un plan arriba para ver el resumen de costos.
+      </div>
+    </div>
+
+  </div><!-- card-body -->
+</div><!-- card -->
+
+<p class="footnote">
+  Precios en USD · IVA no incluido · Descuento trimestral 10% · Descuento anual 20%<br>
+  Plan Custom disponible para carteras &gt; 200 pozos — <a href="mailto:contacto@example.com" style="color:var(--primary)">Contáctanos</a>
+</p>
+
+<script>
+// ── Data ──────────────────────────────────────────────────────────────────
+const PLANS = [
+  {
+    id: 'explorer',
+    name: 'Explorer',
+    maxWells: 10,
+    basePrice: 299,          // USD/mes ciclo mensual
+    pricePerWell: 30,
+    color: '#10b981',
+    popular: false,
+    features: [
+      { text: 'Hasta 10 pozos activos',         ok: true  },
+      { text: 'Asignación por arena (Arps)',      ok: true  },
+      { text: 'Curvas de declinación',            ok: true  },
+      { text: 'Exportación Excel',                ok: true  },
+      { text: 'Usuarios ilimitados',              ok: false },
+      { text: 'API Access',                       ok: false },
+      { text: 'SLA garantizado',                  ok: false },
+    ],
+    icon: `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+    </svg>`,
+  },
+  {
+    id: 'professional',
+    name: 'Professional',
+    maxWells: 50,
+    basePrice: 999,
+    pricePerWell: 20,
+    color: '#4a7cff',
+    popular: true,
+    features: [
+      { text: 'Hasta 50 pozos activos',           ok: true },
+      { text: 'Asignación por arena (Arps)',       ok: true },
+      { text: 'Curvas de declinación',             ok: true },
+      { text: 'Exportación Excel',                 ok: true },
+      { text: 'Usuarios ilimitados',               ok: true },
+      { text: 'API Access',                        ok: false },
+      { text: 'SLA garantizado',                   ok: false },
+    ],
+    icon: `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round"
+        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0
+           0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0
+           0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+    </svg>`,
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    maxWells: 200,
+    basePrice: 2999,
+    pricePerWell: 15,
+    color: '#fbbf24',
+    popular: false,
+    features: [
+      { text: 'Hasta 200 pozos activos',          ok: true },
+      { text: 'Asignación por arena (Arps)',       ok: true },
+      { text: 'Curvas de declinación',             ok: true },
+      { text: 'Exportación Excel',                 ok: true },
+      { text: 'Usuarios ilimitados',               ok: true },
+      { text: 'API Access',                        ok: true  },
+      { text: 'SLA garantizado (99.5%)',           ok: true  },
+    ],
+    icon: `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round"
+        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2
+           0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1
+           1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+    </svg>`,
+  },
+];
+
+const DISCOUNTS = { monthly: 0, quarterly: 0.10, annual: 0.20 };
+const PERIOD_MONTHS = { monthly: 1, quarterly: 3, annual: 12 };
+const PERIOD_LABELS = { monthly: 'mes', quarterly: 'trimestre', annual: 'año' };
+
+// ── State ─────────────────────────────────────────────────────────────────
+let wells = 10;
+let cycle = 'monthly';
+let selectedPlan = null;
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+const fmt = (n) => new Intl.NumberFormat('es-US', {
+  style: 'currency', currency: 'USD', maximumFractionDigits: 0
+}).format(n);
+
+const fmtDec = (n) => new Intl.NumberFormat('es-US', {
+  style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2
+}).format(n);
+
+function calcPlan(plan, cycleName) {
+  const disc     = DISCOUNTS[cycleName];
+  const months   = PERIOD_MONTHS[cycleName];
+  const monthly  = plan.basePrice * (1 - disc);
+  const total    = monthly * months;
+  const perWell  = monthly / plan.maxWells;
+  return { monthly, total, perWell, disc, months };
+}
+
+// ── Render plan cards ─────────────────────────────────────────────────────
+function renderPlans() {
+  const grid = document.getElementById('plansGrid');
+  grid.innerHTML = '';
+
+  PLANS.forEach(plan => {
+    const eligible = wells <= plan.maxWells;
+    const calc     = calcPlan(plan, cycle);
+    const isSelected = selectedPlan === plan.id;
+
+    const card = document.createElement('div');
+    card.className = `plan-card${isSelected ? ' selected' : ''}${!eligible ? ' disabled' : ''}`;
+    card.style.setProperty('--plan-color', plan.color);
+
+    const discLabel = calc.disc > 0
+      ? `<span class="plan-discount-badge">−${Math.round(calc.disc * 100)}% descuento</span>`
+      : '';
+
+    const totalLine = cycle !== 'monthly'
+      ? `<div class="plan-price-total">Total: ${fmt(calc.total)} / ${PERIOD_LABELS[cycle]}</div>`
+      : '';
+
+    const featuresHtml = plan.features.map(f => `
+      <div class="plan-feature">
+        ${f.ok
+          ? `<svg class="check" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+             </svg>`
+          : `<svg class="dash" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4"/>
+             </svg>`
+        }
+        ${f.text}
+      </div>`).join('');
+
+    card.innerHTML = `
+      ${plan.popular ? '<div class="plan-badge">⭐ Recomendado</div>' : ''}
+      <div class="plan-icon">${plan.icon}</div>
+      <div class="plan-name">${plan.name}</div>
+      <div class="plan-wells">Hasta ${plan.maxWells} pozos</div>
+      <div class="plan-price-monthly">
+        <span class="currency">USD</span>${Math.round(calc.monthly).toLocaleString('es-US')}
+        <span class="period">/ mes</span>
+      </div>
+      ${totalLine}
+      ${discLabel}
+      <hr class="plan-divider" />
+      ${featuresHtml}
+    `;
+
+    if (eligible) {
+      card.addEventListener('click', () => {
+        selectedPlan = plan.id;
+        renderPlans();
+        renderResult();
+      });
+    }
+
+    grid.appendChild(card);
+  });
+}
+
+// ── Render result ─────────────────────────────────────────────────────────
+function renderResult() {
+  const box = document.getElementById('resultBox');
+
+  if (!selectedPlan) {
+    box.className = 'result-box';
+    box.innerHTML = `
+      <div class="no-plan-msg">
+        <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15
+               11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+        </svg>
+        Selecciona un plan arriba para ver el resumen de costos.
+      </div>`;
+    return;
+  }
+
+  const plan = PLANS.find(p => p.id === selectedPlan);
+  const calc = calcPlan(plan, cycle);
+
+  // cost per well for THIS user's well count (not plan max)
+  const perWellUser = calc.monthly / wells;
+
+  box.className = 'result-box has-plan';
+  box.style.setProperty('--plan-color', plan.color);
+
+  const savingsNote = calc.disc > 0
+    ? `Ahorras <strong>${fmt(plan.basePrice * PERIOD_MONTHS[cycle] - calc.total)}</strong> vs. pago mensual`
+    : 'Sin descuento en ciclo mensual';
+
+  box.innerHTML = `
+    <div class="result-header">
+      <div>
+        <div class="result-label">Resumen de costos</div>
+        <div class="result-plan-name">Plan ${plan.name} · ${wells} pozo${wells !== 1 ? 's' : ''}</div>
+      </div>
+      <div style="font-size:12px;color:var(--muted)">${savingsNote}</div>
+    </div>
+    <div class="result-grid">
+      <div class="result-item">
+        <div class="result-item-label">Pago ${PERIOD_LABELS[cycle]}</div>
+        <div class="result-item-value highlight">
+          ${fmt(calc.total)}
+          <span class="unit">/ ${PERIOD_LABELS[cycle]}</span>
+        </div>
+        <div class="result-item-sub">${fmtDec(calc.monthly)} USD efectivo / mes</div>
+      </div>
+      <div class="result-item">
+        <div class="result-item-label">Costo por pozo</div>
+        <div class="result-item-value">
+          ${fmtDec(perWellUser)}
+          <span class="unit">/ pozo / mes</span>
+        </div>
+        <div class="result-item-sub">Basado en ${wells} pozo${wells !== 1 ? 's' : ''} sobre ${plan.maxWells} disponibles</div>
+      </div>
+      <div class="result-item">
+        <div class="result-item-label">Costo anual total</div>
+        <div class="result-item-value">
+          ${fmt(calc.monthly * 12)}
+          <span class="unit">/ año</span>
+        </div>
+        <div class="result-item-sub">${fmtDec(calc.monthly * 12 / wells / 12)} USD / pozo / mes (anualizado)</div>
+      </div>
+    </div>`;
+}
+
+// ── Auto-select best plan ─────────────────────────────────────────────────
+function autoSelectPlan() {
+  const best = PLANS.find(p => wells <= p.maxWells);
+  if (!best) {
+    selectedPlan = null;
+  } else if (!selectedPlan || PLANS.find(p => p.id === selectedPlan)?.maxWells < wells) {
+    selectedPlan = best.id;
+  }
+}
+
+// ── Events ────────────────────────────────────────────────────────────────
+document.getElementById('wellCount').addEventListener('input', e => {
+  const v = parseInt(e.target.value);
+  if (!isNaN(v) && v >= 1) {
+    wells = v;
+    autoSelectPlan();
+    renderPlans();
+    renderResult();
+  }
+});
+
+document.querySelectorAll('.billing-toggle button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.billing-toggle button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    cycle = btn.dataset.cycle;
+    renderPlans();
+    renderResult();
+  });
+});
+
+document.getElementById('themeBtn').addEventListener('click', () => {
+  const html = document.documentElement;
+  const isDark = html.dataset.theme === 'dark';
+  html.dataset.theme = isDark ? 'light' : 'dark';
+  document.getElementById('themeBtn').textContent = isDark ? '☀️' : '🌙';
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────
+autoSelectPlan();
+renderPlans();
+renderResult();
+</script>
+</body>
+</html>
