@@ -1,0 +1,57 @@
+<div id="production-panel">
+  {% if production_total %}
+    <div class="status-message success" role="status">
+      <span>
+        <strong>{{ '{:,}'.format(production_total) }}</strong> días cargados ·
+        de <strong>{{ production_from }}</strong> a <strong>{{ production_to }}</strong>
+      </span>
+      <button class="btn btn-sm btn-danger"
+              hx-post="/wells/{{ well.id }}/production/clear"
+              hx-target="#production-panel"
+              hx-swap="outerHTML"
+              hx-confirm="¿Borrar los {{ '{:,}'.format(production_total) }} días de producción de {{ well.name }}? También se descarta el resultado calculado.">
+        Borrar producción
+      </button>
+    </div>
+
+    <div class="card table-card">
+      <div class="table-scroll" style="max-height: 420px">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 70px">#</th>
+              <th>Fecha</th>
+              <th>Producción total (bbl/d)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in production %}
+              <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ r.date }}</td>
+                <td>{{ '{:,.2f}'.format(r.total_production) }}</td>
+              </tr>
+            {% endfor %}
+            {% if production_total > production_preview %}
+              <tr>
+                <td colspan="3" class="table-more">
+                  … y {{ '{:,}'.format(production_total - production_preview) }} registros más
+                </td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% else %}
+    <div class="card">
+      <div class="empty-state">
+        <p class="empty-state-title">Sin producción cargada</p>
+        <p class="empty-state-text">
+          Sube el histórico diario desde la pantalla de pozos. El archivo necesita
+          una columna de fecha y otra de producción total.
+        </p>
+      </div>
+    </div>
+  {% endif %}
+</div>

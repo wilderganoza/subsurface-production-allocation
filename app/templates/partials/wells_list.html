@@ -1,0 +1,126 @@
+{# Un pozo esta listo para asignar cuando tiene los tres conjuntos de datos #}
+<div id="wells-list" class="wells-list">
+  {% for well in wells %}
+    {% set ready = well.production and well.sands and well.intervention_dates %}
+
+    <details class="card well-card">
+      <summary class="well-header">
+        <span class="well-info">
+          <span class="well-title">
+            {{ well.name }}
+            <span class="badge {{ 'primary' if well.decline_model == 'best_fit' else 'muted' }}">
+              {{ well.decline_model }}
+            </span>
+            {% if well.result %}<span class="badge success">Asignado</span>{% endif %}
+          </span>
+          <span class="well-meta">
+            {{ well.production|length }} días ·
+            {{ well.sands|length }} arenas ·
+            {{ well.intervention_dates|length }} intervenciones
+          </span>
+        </span>
+
+        <span class="well-actions">
+          {# El detalle sirve tanto para revisar lo cargado como para completarlo
+             a mano, asi que se ofrece este el pozo listo o no #}
+          <a href="/wells/{{ well.id }}" class="btn btn-sm">Ver y editar datos</a>
+          {% if ready %}
+            <a href="/allocation/{{ well.id }}" class="btn btn-sm btn-primary">Asignación</a>
+          {% else %}
+            <span class="badge warning">Faltan datos</span>
+          {% endif %}
+        </span>
+      </summary>
+
+      <div class="well-body">
+
+        {# --- Carga de los tres Excel --- #}
+        <form class="import-form"
+              hx-post="/wells/{{ well.id }}/import"
+              hx-encoding="multipart/form-data"
+              hx-target="#wells-list"
+              hx-swap="outerHTML">
+
+          <p class="section-label">Cargar datos</p>
+          <p class="section-hint">
+            Cada archivo reemplaza por completo lo que ya hubiera cargado.
+            Puedes subir uno, dos o los tres a la vez.
+          </p>
+
+          <div class="field-row">
+            <div class="form-group" style="flex: 1; min-width: 200px">
+              <label for="prod-{{ well.id }}">Producción</label>
+              <input class="input input-sm" type="file" id="prod-{{ well.id }}"
+                     name="production" accept=".xlsx" />
+              <span class="field-hint">Date | Oil Rate (BOPD)</span>
+            </div>
+            <div class="form-group" style="flex: 1; min-width: 200px">
+              <label for="petro-{{ well.id }}">Petrofísica</label>
+              <input class="input input-sm" type="file" id="petro-{{ well.id }}"
+                     name="petrophysics" accept=".xlsx" />
+              <span class="field-hint">Sand | kh (md·ft)</span>
+            </div>
+            <div class="form-group" style="flex: 1; min-width: 200px">
+              <label for="inter-{{ well.id }}">Intervenciones</label>
+              <input class="input input-sm" type="file" id="inter-{{ well.id }}"
+                     name="interventions" accept=".xlsx" />
+              <span class="field-hint">Sand | fechas con X</span>
+            </div>
+          </div>
+
+          <div class="card-footer">
+            <button type="submit" class="btn btn-sm btn-primary">Importar</button>
+          </div>
+        </form>
+
+        {# --- Ajustes del pozo --- #}
+        <form class="well-settings"
+              hx-post="/wells/{{ well.id }}"
+              hx-target="#wells-list"
+              hx-swap="outerHTML">
+
+          <p class="section-label">Ajustes</p>
+
+          <div class="field-row">
+            <div class="form-group" style="flex: 1; min-width: 200px">
+              <label for="name-{{ well.id }}">Nombre</label>
+              <input class="input" type="text" id="name-{{ well.id }}" name="name"
+                     value="{{ well.name }}" required />
+            </div>
+            <div class="form-group" style="width: 200px">
+              <label for="model-{{ well.id }}">Modelo de declinación</label>
+              <select class="select" id="model-{{ well.id }}" name="decline_model">
+                {% for m in decline_models %}
+                  <option value="{{ m }}" {% if m == well.decline_model %}selected{% endif %}>{{ m }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div class="card-footer">
+            <button type="button" class="btn btn-sm btn-danger"
+                    hx-delete="/wells/{{ well.id }}"
+                    hx-target="#wells-list"
+                    hx-swap="outerHTML"
+                    hx-confirm="¿Eliminar el pozo «{{ well.name }}»? Se borran también su producción, arenas, intervenciones y resultados.">
+              Eliminar pozo
+            </button>
+            <button type="submit" class="btn btn-sm btn-primary">Guardar cambios</button>
+          </div>
+        </form>
+
+      </div>
+    </details>
+  {% else %}
+    <div class="card">
+      <div class="empty-state">
+        <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+        <p class="empty-state-title">Sin pozos</p>
+        <p class="empty-state-text">Crea el primer pozo para empezar a cargar datos.</p>
+      </div>
+    </div>
+  {% endfor %}
+</div>

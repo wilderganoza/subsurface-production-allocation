@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}{{ well.name }} · {{ app_name }}{% endblock %}
+
+{% block extra_head %}
+<script src="https://unpkg.com/d3@7" defer></script>
+<script src="{{ asset('js/oig-charts.js') }}" defer></script>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-row">
+    <div>
+      <h1 class="page-title">{{ well.name }}</h1>
+      <p class="page-subtitle">
+        Modelo {{ well.decline_model }} ·
+        {{ production_days }} días · {{ sand_count }} arenas ·
+        {{ intervention_count }} intervenciones
+      </p>
+    </div>
+    <a href="/wells" class="btn btn-sm">Volver a pozos</a>
+  </div>
+</div>
+
+{% if missing %}
+  <div class="status-message warning" role="alert">
+    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="flex-shrink:0">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+    </svg>
+    <span>Falta cargar {{ missing | join(', ') }}. Cárgalo desde la pantalla de pozos.</span>
+  </div>
+{% else %}
+  <div class="run-bar">
+    <button class="btn btn-primary"
+            hx-post="/allocation/{{ well.id }}/run"
+            hx-target="#allocation-results"
+            hx-swap="outerHTML"
+            hx-indicator="#run-spinner">
+      Ejecutar asignación
+    </button>
+    <span id="run-spinner" class="htmx-indicator run-hint">
+      <span class="spinner spinner-sm"></span>
+      Calculando declinaciones por arena…
+    </span>
+  </div>
+{% endif %}
+
+{% include "partials/allocation_results.html" %}
+{% endblock %}

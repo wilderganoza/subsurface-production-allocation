@@ -1,0 +1,191 @@
+<div id="allocation-results">
+{% if result %}
+
+  {% if result.warnings %}
+    <div class="status-message warning" role="alert">
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="flex-shrink:0">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+      </svg>
+      <div>
+        <strong>{{ result.warnings|length }} aviso(s) del motor</strong>
+        <ul class="warning-list">
+          {% for w in result.warnings[:6] %}<li>{{ w }}</li>{% endfor %}
+          {% if result.warnings|length > 6 %}
+            <li>… y {{ result.warnings|length - 6 }} más</li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="tab-bar" role="tablist">
+    <button class="tab-btn active" data-tab="chart" role="tab">Asignación</button>
+    <button class="tab-btn" data-tab="summary" role="tab">Resumen por arena</button>
+    <button class="tab-btn" data-tab="fits" role="tab">Curvas ajustadas</button>
+    <button class="tab-btn" data-tab="decisions" role="tab">Decisiones del motor</button>
+  </div>
+
+  {# ------------------------------------------------------------- Gráfico #}
+  <section class="tab-panel active" data-panel="chart">
+    <div class="card">
+      <h2 class="card-title">Producción asignada por arena</h2>
+      <div id="stacked-chart" class="chart-box"></div>
+      <p class="chart-note">
+        Pasa el cursor por el gráfico para ver el reparto de cada fecha.
+      </p>
+    </div>
+  </section>
+
+  {# ------------------------------------------------------------- Resumen #}
+  <section class="tab-panel" data-panel="summary">
+    <div class="card table-card">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Arena</th>
+              <th style="width: 20%">Total asignado</th>
+              <th style="width: 18%">Promedio diario</th>
+              <th style="width: 22%">Participación</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in summary %}
+              <tr>
+                <td>
+                  <span class="sand-dot" style="background: var(--color-chart-{{ loop.index0 % 8 + 1 }})"></span>
+                  {{ row.sand }}
+                </td>
+                <td>{{ '{:,.1f}'.format(row.total) }} bbl</td>
+                <td>{{ '{:,.1f}'.format(row.average) }} bbl/d</td>
+                <td>
+                  <div class="share-bar">
+                    <div class="share-fill"
+                         style="width: {{ row.share }}%; background: var(--color-chart-{{ loop.index0 % 8 + 1 }})"></div>
+                  </div>
+                  <span class="share-value">{{ '%.1f'|format(row.share) }} %</span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  {# ------------------------------------------------------- Curvas ajustadas #}
+  <section class="tab-panel" data-panel="fits">
+    <div class="card table-card">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Arena</th>
+              <th>Periodo ajustado</th>
+              <th style="width: 12%">Modelo</th>
+              <th style="width: 10%">qi</th>
+              <th style="width: 10%">Di</th>
+              <th style="width: 8%">b</th>
+              <th style="width: 10%">R²</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for f in result.declineFits %}
+              <tr>
+                <td>{{ f.sand }}</td>
+                <td>{{ f.startDate }} → {{ f.endDate }}</td>
+                <td>{{ f.model }}</td>
+                <td>{{ '%.1f'|format(f.qi) }}</td>
+                <td>{{ '%.5f'|format(f.di) }}</td>
+                <td>{{ '%.3f'|format(f.b) }}</td>
+                <td>
+                  {# La guía pide mostrar el R² como indicador de calidad del ajuste #}
+                  <span class="badge {{ 'success' if f.r2 > 0.8 else ('warning' if f.r2 > 0.5 else 'danger') }}">
+                    {{ '%.4f'|format(f.r2) }}
+                  </span>
+                </td>
+              </tr>
+            {% else %}
+              <tr><td colspan="7">Ningún periodo requirió ajuste de declinación.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  {# ---------------------------------------------------------- Decisiones #}
+  <section class="tab-panel" data-panel="decisions">
+    {% for d in result.decisions %}
+      <div class="card decision-card">
+        <div class="decision-header">
+          <span class="decision-case">{{ d.case }}</span>
+          <span class="decision-dates">{{ d.startDate }} → {{ d.endDate }}</span>
+        </div>
+        <p class="decision-description">{{ d.description }}</p>
+        <div class="decision-sands">
+          {% for s in d.activeSands %}<span class="badge primary">{{ s }}</span>{% endfor %}
+          {% for s in d.newSands %}<span class="badge success">+ {{ s }}</span>{% endfor %}
+          {% for s in d.closedSands %}<span class="badge danger">− {{ s }}</span>{% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  </section>
+
+  <p class="computed-at">Calculado el {{ computed_at.strftime('%d/%m/%Y a las %H:%M') }} h</p>
+
+  {# Los datos del gráfico viajan como JSON y los dibuja D3 al cargar #}
+  <script id="allocation-data" type="application/json">{{ chart_data }}</script>
+
+{% endif %}
+</div>
+
+{% if result %}
+<script>
+(function () {
+  "use strict";
+
+  // Las pestañas funcionan igual que en el resto de las aplicaciones
+  const buttons = document.querySelectorAll(".tab-btn");
+  const panels = document.querySelectorAll(".tab-panel");
+
+  buttons.forEach(function (button) {
+    button.addEventListener("click", function () {
+      const target = button.dataset.tab;
+      buttons.forEach(b => b.classList.toggle("active", b === button));
+      panels.forEach(p => p.classList.toggle("active", p.dataset.panel === target));
+      // El gráfico se redibuja al mostrarse: D3 necesita un ancho real
+      if (target === "chart") draw();
+    });
+  });
+
+  function draw() {
+    const node = document.getElementById("allocation-data");
+    const box = document.getElementById("stacked-chart");
+    if (!node || !box || !window.oigCharts || !window.d3) return;
+
+    const payload = JSON.parse(node.textContent);
+    const data = payload.rows.map(function (r) {
+      const row = { date: new Date(r.date) };
+      payload.sands.forEach(function (s, i) { row[s] = r.values[i]; });
+      return row;
+    });
+
+    window.oigCharts.area(box, data, payload.sands,
+                          { yLabel: "Producción asignada (bbl/d)" });
+  }
+
+  // Esperamos a que D3 y charts.js terminen de cargar (van con defer)
+  if (document.readyState === "complete") draw();
+  else window.addEventListener("load", draw);
+
+  // Redibujamos al cambiar el tamaño, con un pequeño retardo
+  let timer;
+  window.addEventListener("resize", function () {
+    clearTimeout(timer);
+    timer = setTimeout(draw, 200);
+  });
+})();
+</script>
+{% endif %}

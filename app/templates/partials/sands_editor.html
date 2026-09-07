@@ -1,0 +1,85 @@
+<div id="sands-editor">
+  {% if sands %}
+    <div class="status-message success" role="status">
+      <span>
+        <strong>{{ sands|length }}</strong> arenas definidas ·
+        k·h total <strong>{{ '{:,.2f}'.format(total_kh) }}</strong> md·ft
+      </span>
+    </div>
+  {% endif %}
+
+  <div class="card table-card">
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 60px">#</th>
+            <th>Arena</th>
+            <th style="width: 22%">k·h (md·ft)</th>
+            <th style="width: 22%">Participación</th>
+            <th style="width: 180px"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in sands %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td colspan="4">
+                {# Cada fila es su propio formulario: se edita en el sitio #}
+                <form class="inline-row"
+                      hx-post="/wells/{{ well.id }}/sands/{{ s.id }}"
+                      hx-target="#sands-editor"
+                      hx-swap="outerHTML">
+                  <input class="input input-sm" type="text" name="sand_name"
+                         value="{{ s.sand_name }}" required
+                         aria-label="Nombre de la arena" style="flex: 1; min-width: 140px" />
+                  <input class="input input-sm" type="number" name="kh" step="any" min="0"
+                         value="{{ s.kh }}" required
+                         aria-label="k·h en md·ft" style="width: 140px" />
+                  <span class="share-cell">
+                    <span class="share-bar">
+                      <span class="share-fill"
+                            style="width: {{ s.share }}%; background: var(--color-chart-{{ loop.index0 % 8 + 1 }})"></span>
+                    </span>
+                    <span class="share-value">{{ '%.2f'|format(s.share) }} %</span>
+                  </span>
+                  <button type="submit" class="btn btn-sm btn-primary">Guardar</button>
+                  <button type="button" class="btn btn-sm btn-danger"
+                          hx-delete="/wells/{{ well.id }}/sands/{{ s.id }}"
+                          hx-target="#sands-editor"
+                          hx-swap="outerHTML"
+                          hx-confirm="¿Eliminar la arena «{{ s.sand_name }}»? También se borra su fila de la matriz de intervenciones.">
+                    Eliminar
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="5" class="table-more">
+                Ninguna arena definida. Añade la primera abajo o sube el archivo de petrofísica.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card-footer" style="justify-content: flex-start">
+      {# Alta de una arena nueva, siempre visible: es la acción más frecuente #}
+      <form class="inline-row"
+            hx-post="/wells/{{ well.id }}/sands"
+            hx-target="#sands-editor"
+            hx-swap="outerHTML"
+            hx-on::after-request="if (event.detail.successful) this.reset()">
+        <input class="input input-sm" type="text" name="sand_name" required
+               placeholder="Nombre de la arena" aria-label="Nombre de la arena nueva"
+               style="min-width: 180px" />
+        <input class="input input-sm" type="number" name="kh" step="any" min="0" required
+               placeholder="k·h (md·ft)" aria-label="k·h de la arena nueva"
+               style="width: 160px" />
+        <button type="submit" class="btn btn-sm btn-primary">Añadir arena</button>
+      </form>
+    </div>
+  </div>
+</div>

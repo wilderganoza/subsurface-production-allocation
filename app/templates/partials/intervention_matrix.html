@@ -1,0 +1,90 @@
+<div id="intervention-matrix">
+  {% if matrix.dates and matrix.rows %}
+    <div class="status-message success" role="status">
+      <span>
+        <strong>{{ matrix.dates|length }}</strong> fechas de intervención ·
+        <strong>{{ matrix.sand_count }}</strong> arenas en la matriz
+      </span>
+    </div>
+
+    <div class="card table-card">
+      <div class="table-scroll">
+        <table class="data-table matrix-table">
+          <thead>
+            <tr>
+              <th style="min-width: 160px">Arena</th>
+              {% for d in matrix.dates %}
+                <th class="matrix-date">
+                  <span>{{ d.intervention_date }}</span>
+                  <button class="icon-btn icon-btn-xs"
+                          title="Quitar esta intervención"
+                          aria-label="Quitar la intervención del {{ d.intervention_date }}"
+                          hx-delete="/wells/{{ well.id }}/interventions/dates/{{ d.id }}"
+                          hx-target="#intervention-matrix"
+                          hx-swap="outerHTML"
+                          hx-confirm="¿Quitar la intervención del {{ d.intervention_date }}? Se pierde esa columna de la matriz.">
+                    ✕
+                  </button>
+                </th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in matrix.rows %}
+              <tr>
+                <td class="matrix-sand">{{ row.sand_name }}</td>
+                {% for c in row.cells %}
+                  <td class="matrix-cell {{ 'open' if c.is_open else '' }}">
+                    {# Cada celda es un botón: se alterna con un clic, como antes #}
+                    <button type="button" class="matrix-toggle"
+                            aria-pressed="{{ 'true' if c.is_open else 'false' }}"
+                            aria-label="{{ row.sand_name }} el {{ c.date }}: {{ 'abierta' if c.is_open else 'cerrada' }}"
+                            hx-post="/wells/{{ well.id }}/interventions/toggle"
+                            hx-vals='{"sand_name": {{ row.sand_name | tojson }}, "intervention_date": "{{ c.date }}"}'
+                            hx-target="#intervention-matrix"
+                            hx-swap="outerHTML">
+                      {{ 'X' if c.is_open else '–' }}
+                    </button>
+                  </td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% else %}
+    <div class="card">
+      <div class="empty-state">
+        <p class="empty-state-title">Matriz vacía</p>
+        <p class="empty-state-text">
+          {% if not matrix.sand_count %}
+            Primero define las arenas: la matriz usa una fila por arena.
+          {% else %}
+            Añade la primera fecha de intervención para empezar a marcar qué
+            arenas estaban abiertas.
+          {% endif %}
+        </p>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="card">
+    <form class="inline-row"
+          hx-post="/wells/{{ well.id }}/interventions/dates"
+          hx-target="#intervention-matrix"
+          hx-swap="outerHTML"
+          hx-on::after-request="if (event.detail.successful) this.reset()">
+      <div class="form-group" style="margin-bottom: 0">
+        <label for="new-intervention-date">Añadir fecha de intervención</label>
+        <input class="input input-sm" type="date" id="new-intervention-date"
+               name="intervention_date" required />
+      </div>
+      <button type="submit" class="btn btn-sm btn-primary">Añadir fecha</button>
+    </form>
+    <p class="field-hint">
+      Marca con <strong>X</strong> las arenas que estaban abiertas en cada fecha.
+      El motor usa esos cambios para decidir qué caso aplica en cada periodo.
+    </p>
+  </div>
+</div>

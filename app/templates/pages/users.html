@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Usuarios · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-row">
+    <div>
+      <h1 class="page-title">Usuarios</h1>
+      <p class="page-subtitle">Cuentas con acceso al sistema</p>
+    </div>
+    {% if admin_available %}
+      <button class="btn btn-sm btn-primary" id="new-user-btn">Nuevo usuario</button>
+    {% endif %}
+  </div>
+</div>
+
+{% if not admin_available %}
+  {# Sin la clave de servicio la pantalla no puede operar. Explicamos qué falta
+     en vez de mostrar una tabla vacía sin motivo. #}
+  <div class="status-message warning" role="alert">
+    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="flex-shrink:0">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+    </svg>
+    <span>
+      {% if error %}
+        {{ error }}
+      {% else %}
+        Falta configurar <code>SUPABASE_SERVICE_ROLE_KEY</code> en el servidor.
+        Se obtiene en el dashboard de Supabase, en <strong>Project Settings → API Keys</strong>.
+      {% endif %}
+    </span>
+  </div>
+
+  <div class="card">
+    <div class="empty-state">
+      <p class="empty-state-title">Administración no disponible</p>
+      <p class="empty-state-text">
+        Esta clave da acceso total a la base de datos. Guárdala solo en el
+        <code>.env</code> del servidor: nunca en el repositorio ni en el navegador.
+      </p>
+    </div>
+  </div>
+{% else %}
+
+<div id="error-zone"></div>
+
+{# Formulario de alta, oculto hasta que se pulsa "Nuevo usuario" #}
+<form id="new-user-form" class="card" hidden
+      hx-post="/admin/users"
+      hx-target="#users-table"
+      hx-swap="outerHTML">
+
+  <h2 class="card-title">Nuevo usuario</h2>
+
+  <div class="field-row">
+    <div class="form-group" style="flex: 1; min-width: 220px">
+      <label for="new-email">Correo</label>
+      <input class="input" type="email" id="new-email" name="email" required
+             autocomplete="off" placeholder="persona@oig.com.pe" />
+    </div>
+    <div class="form-group" style="flex: 1; min-width: 200px">
+      <label for="new-name">Nombre completo</label>
+      <input class="input" type="text" id="new-name" name="name" />
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div class="form-group" style="width: 160px">
+      <label for="new-role">Rol</label>
+      <select class="select" id="new-role" name="role">
+        <option value="engineer">Ingeniero</option>
+        <option value="admin">Administrador</option>
+      </select>
+    </div>
+    <div class="form-group" style="flex: 1; min-width: 200px">
+      <label for="new-password">Contraseña</label>
+      <input class="input" type="password" id="new-password" name="password" required
+             minlength="{{ min_password }}" autocomplete="new-password" />
+      <span class="field-hint">Mínimo {{ min_password }} caracteres</span>
+    </div>
+  </div>
+
+  <div class="card-footer">
+    <button type="button" class="btn btn-sm" id="cancel-user-btn">Cancelar</button>
+    <button type="submit" class="btn btn-sm btn-primary">Crear usuario</button>
+  </div>
+</form>
+
+{% include "partials/users_table.html" %}
+
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  "use strict";
+
+  const form = document.getElementById("new-user-form");
+  const btnNew = document.getElementById("new-user-btn");
+  const btnCancel = document.getElementById("cancel-user-btn");
+
+  if (!form || !btnNew) return;
+
+  btnNew.addEventListener("click", function () {
+    form.hidden = false;
+    document.getElementById("new-email").focus();
+  });
+
+  btnCancel.addEventListener("click", function () {
+    form.hidden = true;
+    form.reset();
+  });
+
+  document.body.addEventListener("htmx:afterRequest", function (e) {
+    if (e.target === form && e.detail.successful) {
+      form.hidden = true;
+      form.reset();
+    }
+  });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}{{ well.name }} · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-row">
+    <div>
+      <h1 class="page-title">{{ well.name }}</h1>
+      <p class="page-subtitle">
+        Modelo {{ well.decline_model }} ·
+        {{ '{:,}'.format(production_total) }} días ·
+        {{ sands|length }} arenas ·
+        {{ matrix.dates|length }} intervenciones
+      </p>
+    </div>
+    <div class="page-header-actions">
+      <a href="/wells" class="btn btn-sm">Volver a pozos</a>
+      <a href="/allocation/{{ well.id }}" class="btn btn-sm btn-primary">Ir a la asignación</a>
+    </div>
+  </div>
+</div>
+
+<div id="error-zone"></div>
+
+<div class="tab-bar" role="tablist">
+  <button class="tab-btn active" data-tab="production" role="tab">Producción</button>
+  <button class="tab-btn" data-tab="sands" role="tab">Petrofísica</button>
+  <button class="tab-btn" data-tab="interventions" role="tab">Intervenciones</button>
+</div>
+
+<section class="tab-panel active" data-panel="production">
+  <p class="panel-desc">
+    Histórico diario de producción total del pozo. Se carga por archivo desde la
+    pantalla de pozos; aquí se revisa y, si hace falta, se descarta entero.
+  </p>
+  {% include "partials/production_panel.html" %}
+</section>
+
+<section class="tab-panel" data-panel="sands">
+  <p class="panel-desc">
+    Producto permeabilidad por espesor (k·h) de cada arena. Es lo que pondera el
+    reparto cuando el motor tiene que repartir un excedente o un déficit.
+  </p>
+  {% include "partials/sands_editor.html" %}
+</section>
+
+<section class="tab-panel" data-panel="interventions">
+  <p class="panel-desc">
+    Qué arenas estaban abiertas en cada intervención. Cada clic en una celda la
+    alterna entre abierta y cerrada.
+  </p>
+  {% include "partials/intervention_matrix.html" %}
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  "use strict";
+
+  // Las pestañas funcionan igual que en el resto de las aplicaciones
+  const buttons = document.querySelectorAll(".tab-btn");
+  const panels = document.querySelectorAll(".tab-panel");
+
+  buttons.forEach(function (button) {
+    button.addEventListener("click", function () {
+      const target = button.dataset.tab;
+      buttons.forEach(b => b.classList.toggle("active", b === button));
+      panels.forEach(p => p.classList.toggle("active", p.dataset.panel === target));
+    });
+  });
+})();
+</script>
+{% endblock %}

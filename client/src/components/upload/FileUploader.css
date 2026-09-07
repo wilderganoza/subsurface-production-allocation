@@ -1,0 +1,120 @@
+.file-uploader {
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 40px 24px;
+  text-align: center;
+  cursor: pointer;
+  background: var(--color-surface);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-base), background var(--transition-base);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.file-uploader:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(74, 124, 255, 0.08);
+  background: rgba(74, 124, 255, 0.04);
+}
+
+.file-uploader:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(74, 124, 255, 0.14);
+}
+
+.file-uploader.dragging {
+  border-color: var(--color-primary);
+  background: rgba(74, 124, 255, 0.08);
+  box-shadow: 0 0 0 6px rgba(74, 124, 255, 0.12);
+}
+
+.file-uploader.has-file {
+  border-color: var(--color-success);
+  background: rgba(52, 211, 153, 0.06);
+  box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.12);
+}
+
+.file-uploader.has-file:hover {
+  border-color: var(--color-success);
+  background: rgba(52, 211, 153, 0.1);
+}
+
+.file-uploader-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text);
+}
+
+.file-uploader-icon {
+  font-size: 48px;
+  line-height: 1;
+  color: var(--color-primary);
+}
+
+.file-uploader-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.file-uploader-subtitle {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.file-uploader-filename {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-success);
+  background: rgba(52, 211, 153, 0.15);
+  padding: 4px 14px;
+  border-radius: 20px;
+}
+
+.file-uploader-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.file-uploader-btn {
+  padding: 8px 24px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.file-uploader-btn.primary {
+  background: var(--color-primary);
+  color: #ffffff;
+  border: 1px solid var(--color-primary);
+}
+
+.file-uploader-btn.primary:hover {
+  background: var(--color-primary-hover);
+}
+
+.file-uploader-btn.secondary {
+  background: transparent;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.file-uploader-btn.secondary:hover {
+  background: var(--color-surface-hover);
+}
+
+.file-uploader.has-file .file-uploader-btn.primary {
+  background: var(--color-success);
+  border-color: var(--color-success);
+}
+
+.file-uploader.has-file .file-uploader-btn.primary:hover {
+  background: #22c26a;
+}

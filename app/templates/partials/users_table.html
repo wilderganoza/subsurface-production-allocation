@@ -1,0 +1,75 @@
+<div id="users-table" class="users-list-wrap">
+  {% for u in users %}
+    <details class="card user-card">
+      <summary class="user-header">
+        <span class="avatar">{{ (u.full_name or u.email)[0]|upper }}</span>
+        <span class="user-info-block">
+          <span class="user-title">
+            {{ u.full_name or 'Sin nombre' }}
+            {% if u.role == 'admin' %}<span class="badge primary">Administrador</span>{% endif %}
+            {% if not u.is_active %}<span class="badge danger">Inactivo</span>{% endif %}
+            {% if u.id == current_user.id %}<span class="badge info">Tú</span>{% endif %}
+          </span>
+          <span class="user-meta">{{ u.email }}</span>
+        </span>
+        <span class="user-last-access">
+          {% if u.last_sign_in %}
+            Último acceso {{ u.last_sign_in[:10] }}
+          {% else %}
+            Nunca ingresó
+          {% endif %}
+        </span>
+      </summary>
+
+      <form class="user-editor"
+            hx-post="/admin/users/{{ u.id }}"
+            hx-target="#users-table"
+            hx-swap="outerHTML">
+
+        <div class="field-row">
+          <div class="form-group" style="flex: 1; min-width: 200px">
+            <label for="name-{{ u.id }}">Nombre completo</label>
+            <input class="input" type="text" id="name-{{ u.id }}" name="name" value="{{ u.full_name }}" />
+          </div>
+          <div class="form-group" style="width: 160px">
+            <label for="role-{{ u.id }}">Rol</label>
+            <select class="select" id="role-{{ u.id }}" name="role">
+              <option value="engineer" {% if u.role != 'admin' %}selected{% endif %}>Ingeniero</option>
+              <option value="admin" {% if u.role == 'admin' %}selected{% endif %}>Administrador</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex: 1; min-width: 200px">
+            <label for="pass-{{ u.id }}">Restablecer contraseña</label>
+            <input class="input" type="password" id="pass-{{ u.id }}" name="password"
+                   autocomplete="new-password" placeholder="Dejar vacío para no cambiarla" />
+          </div>
+        </div>
+
+        <label class="check-inline">
+          <input type="checkbox" name="is_active" {% if u.is_active %}checked{% endif %} />
+          <span>Cuenta activa</span>
+        </label>
+
+        <div class="card-footer">
+          {% if u.id != current_user.id %}
+            <button type="button" class="btn btn-sm btn-danger"
+                    hx-delete="/admin/users/{{ u.id }}"
+                    hx-target="#users-table"
+                    hx-swap="outerHTML"
+                    hx-confirm="¿Eliminar la cuenta de {{ u.full_name or u.email }}? Es definitivo. Los pozos que creó se conservan.">
+              Eliminar cuenta
+            </button>
+          {% endif %}
+          <button type="submit" class="btn btn-sm btn-primary">Guardar cambios</button>
+        </div>
+      </form>
+    </details>
+  {% else %}
+    <div class="card">
+      <div class="empty-state">
+        <p class="empty-state-title">Sin usuarios</p>
+        <p class="empty-state-text">Crea la primera cuenta para dar acceso al sistema.</p>
+      </div>
+    </div>
+  {% endfor %}
+</div>

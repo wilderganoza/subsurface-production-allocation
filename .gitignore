@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.env
+*.xlsx
+*.xls
+*.csv
+test_data/
+.claude/
+
+# Entorno virtual de Python y cache de pytest
+venv
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+*.log

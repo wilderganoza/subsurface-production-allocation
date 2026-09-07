@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Pozos · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-row">
+    <div>
+      <h1 class="page-title">Pozos</h1>
+      <p class="page-subtitle">Carga los datos de cada pozo y ejecuta la asignación</p>
+    </div>
+    <button class="btn btn-sm btn-primary" id="new-well-btn">Nuevo pozo</button>
+  </div>
+</div>
+
+<div id="error-zone"></div>
+
+<form id="new-well-form" class="card" hidden
+      hx-post="/wells"
+      hx-target="#wells-list"
+      hx-swap="outerHTML">
+
+  <h2 class="card-title">Nuevo pozo</h2>
+
+  <div class="field-row">
+    <div class="form-group" style="flex: 1; min-width: 220px">
+      <label for="new-well-name">Nombre</label>
+      <input class="input" type="text" id="new-well-name" name="name" required
+             placeholder="Ej. LX-014" />
+    </div>
+    <div class="form-group" style="width: 200px">
+      <label for="new-well-model">Modelo de declinación</label>
+      <select class="select" id="new-well-model" name="decline_model">
+        {% for m in decline_models %}
+          <option value="{{ m }}" {% if m == 'best_fit' %}selected{% endif %}>{{ m }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <div class="card-footer">
+    <button type="button" class="btn btn-sm" id="cancel-well-btn">Cancelar</button>
+    <button type="submit" class="btn btn-sm btn-primary">Crear pozo</button>
+  </div>
+</form>
+
+{% include "partials/wells_list.html" %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  "use strict";
+
+  const form = document.getElementById("new-well-form");
+  const btnNew = document.getElementById("new-well-btn");
+  const btnCancel = document.getElementById("cancel-well-btn");
+
+  btnNew.addEventListener("click", function () {
+    form.hidden = false;
+    document.getElementById("new-well-name").focus();
+  });
+
+  btnCancel.addEventListener("click", function () {
+    form.hidden = true;
+    form.reset();
+  });
+
+  document.body.addEventListener("htmx:afterRequest", function (e) {
+    if (e.target === form && e.detail.successful) {
+      form.hidden = true;
+      form.reset();
+    }
+  });
+})();
+</script>
+{% endblock %}
